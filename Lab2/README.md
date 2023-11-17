@@ -6,7 +6,54 @@ In the Nim game, players take turns removing objects from distinct piles. In eac
 A possible modification is to impose a maximum number of objects that can be removed k for each row.
 
 ## Collaborations
-I worked with Arturo Adelfio (s316716)
+I worked with Arturo Adelfio (s316716) to implement both the expert agent and the 1+ λ strategy. I then implemented the extended version of the chosen ES, the (μ+λ) Strategy.
+
+## Task2.1
+
+We implemented a strategy for an expert agent by improving the optimal one, since we noticed that in some matches against the pure random, the optimal strategy lost the game. Here an example:
+
+INFO:root:init : <1 3 5 7 9>
+
+INFO:root:ply: player 0 plays Nimply(row=3, num_objects=7)
+
+INFO:root:status: <1 3 5 0 9>
+
+INFO:root:ply: player 1 plays Nimply(row=4, num_objects=8)
+
+INFO:root:status: <1 3 5 0 1>
+
+INFO:root:ply: player 0 plays Nimply(row=2, num_objects=4)
+
+INFO:root:status: <1 3 1 0 1>
+
+INFO:root:ply: player 1 plays Nimply(row=0, num_objects=1)
+
+INFO:root:status: <0 3 1 0 1>
+
+INFO:root:ply: player 0 plays Nimply(row=4, num_objects=1)
+
+INFO:root:status: <0 3 1 0 0>
+
+INFO:root:ply: player 1 plays Nimply(row=1, num_objects=3)
+
+INFO:root:status: <0 0 1 0 0>
+
+INFO:root:ply: player 0 plays Nimply(row=2, num_objects=1)
+
+INFO:root:status: <0 0 0 0 0>
+
+INFO:root:status: Player 1 won!
+
+As it can be noticed, only the rule of the nim sum != 0 brought the player to suboptimal choices in this move:
+INFO:root:status: <0 3 1 0 1>
+
+INFO:root:ply: player 0 plays Nimply(row=4, num_objects=1)
+
+INFO:root:status: <0 3 1 0 0>
+
+where he should have left <0 1 1 0 1> instead of INFO:root:status: <0 3 1 0 0>.
+
+We also noticed that playing against an opposite optimal strategy (nim sum = 0) this won even though we made the first move. All this considerations made us implement the expert system.
 
 
 ## Sources
