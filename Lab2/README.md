@@ -3,7 +3,7 @@ In the Nim game, players take turns removing objects from distinct piles. In eac
 
 **Subtraction Game**
 
-A possible modification is to impose a maximum number of objects that can be removed k for each row.
+A possible modification is to impose a maximum number of objects (k) that can be removed for each row.
 
 ## Collaborations
 I worked with Arturo Adelfio (s316716) to implement both the expert agent and the 1+ λ strategy. I then implemented the extended version of the chosen ES, the (μ+λ) Strategy.
@@ -51,7 +51,7 @@ INFO:root:ply: player 0 plays Nimply(row=4, num_objects=1)
 
 INFO:root:status: <0 3 1 0 0>
 
-where he should have left <0 1 1 0 1> instead of INFO:root:status: <0 3 1 0 0>.
+where he should have left <0 1 1 0 1> instead of INFO:root:status: <0 3 1 0 0>. So we understood that other rules had to be added.
 
 We also noticed that playing against an opposite optimal strategy (nim sum = 0) this won even though we made the first move. All this considerations made us implement the expert system.
 
