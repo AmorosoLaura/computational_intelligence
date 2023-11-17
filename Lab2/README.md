@@ -55,6 +55,9 @@ where he should have left <0 1 1 0 1> instead of INFO:root:status: <0 3 1 0 0>. 
 
 We also noticed that playing against an opposite optimal strategy (nim sum = 0) this won even though we made the first move. All this considerations made us implement the expert system.
 
+## Task2.2
+We chose to implement the 1+λ strategy as an ES to solve the problem. To check wheter our algorithm worked we included the expert_agent among the proposed strategies, to see if it converged.
+
 
 ## Sources
 Here some links I used to better understand the problem and its implementation:
