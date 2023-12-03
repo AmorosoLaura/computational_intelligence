@@ -19,13 +19,13 @@ With problems of increasing complexity this approach generates poor resutls sinc
 ![Alt text](images/image-4.png)
 ![Alt text](images/image-5.png)
 
-So, to promote diversity inside the population we implemented an Island model with a certain rate of migration, and we created the islands by choosing similar individuals. We tried two methods to compute similarity, one using a Kmeans clustering approach to group individuals that have similar genotype, and one that sorts by the fitness.
+So, to promote diversity inside the population we implemented an Island Model with a certain probability of migration, and we created the islands by choosing similar individuals. We tried two methods to compute similarity, one using a Kmeans clustering approach to group individuals that have similar genotype, and one that sorts by the fitness.
 
 In addition, we experimented a technique that selects the migrants among the best or randomly with a 0.5 probability and we noticed that this helped. 
 
 We faced the premature convergence problem and did not reach 1, although we were close for the problem 5, but not at all for the instance at 10.
 
-As further methods to promote diversity we tried to create the islands with different mutation rates and crossover types and by forcing the duplicates removal at each generation, to escape from premature convergence. But if at first this seemed to be a reasonable solution, then we noticed that it was not the best configuration.
+As further methods to promote diversity we tried to create the islands with different mutation rates and crossover types and by forcing the duplicates removal at each generation, to escape from premature convergence. But if at first this seemed to be a reasonable solution, then we noticed that it was not the best configuration, even though sometimes the removal of duplicates improves the solution.
 
 The best parameters are:
 ALL_POPULATION_SIZE = 300
@@ -43,7 +43,7 @@ num_migrants=10
 ![Alt text](images/image-3.png)
 
 
-Then we tried to verify what were the performances of an hill climbing algorithm, in his Steepest Ascent version, combined with some random mutation, since we read in article among the linked ones, about a study in which this algorithm berformed better then GA, but ubfortunately this was not our case.
+Then we tried to verify what were the performances of an hill climbing algorithm, in his Steepest Ascent version, combined with some random mutation, since we read in article among the linked ones, about a study in which this algorithm performed better then GA, but unfortunately this was not our case.
 
 ![Alt text](images/image-6.png)
 
