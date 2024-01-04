@@ -89,21 +89,21 @@ class Game(object):
             while not ok:
                 from_pos, slide = players[self.current_player_idx].make_move(
                     self)
-                print(from_pos,slide)
+                #print(from_pos,slide)
                 ok = self.__move(from_pos, slide, self.current_player_idx)
                 #print(ok)
             #print("player ", self.current_player_idx, " is playing ", from_pos, slide)
-            self.print()
+            #self.print()
             winner = self.check_winner()
         return winner
 
     def __move(self, from_pos: tuple[int, int], slide: Move, player_id: int) -> bool:
         '''Perform a move'''
+        #print("Game __move method")
         if player_id > 2:
             return False
         # Oh God, Numpy arrays
         #prev_value = deepcopy(self._board[(from_pos[1], from_pos[0])])
-        
         prev_value = deepcopy(self._board[(from_pos[0], from_pos[1])])
         #acceptable = self.__take((from_pos[1], from_pos[0]), player_id)
         acceptable = self.__take((from_pos[0], from_pos[1]), player_id)
@@ -220,7 +220,3 @@ class Game(object):
                 self._board[(self._board.shape[0] - 1, from_pos[1])] = piece
         return acceptable
     
-    def move(self, from_pos: tuple[int, int], slide: Move, player_id: int)->bool:
-        return self.__move(from_pos, slide, player_id)
-
-

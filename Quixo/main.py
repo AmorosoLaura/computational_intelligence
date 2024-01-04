@@ -1,5 +1,6 @@
 import random
 from game import Game, Move, Player
+from Montecarlo import MontecarloAgent, MontecarloGame
 from copy import deepcopy
 import collections
 import sys
@@ -7,17 +8,22 @@ import sys
 
 class RandomPlayer(Player):
     """class defining a player that chooses his moves randomly"""
-    def __init__(self) -> None:
+    def __init__(self,symbol:None) -> None:
         super().__init__()
+        self.symbol=symbol
 
-    def make_move(self, game: 'Game') -> tuple[tuple[int, int], Move]:
+    def make_move(self,state:None, game: 'Game') -> tuple[tuple[int, int], Move]:
         from_pos = (random.randint(0, 4), random.randint(0, 4))
         move = random.choice([Move.TOP, Move.BOTTOM, Move.LEFT, Move.RIGHT])
         return from_pos, move
 
-class MyPlayer(Player):
-    def __init__(self, depth):
+class MinmaxPlayer(Player):
+    """
+    player that plays according to the minmax algorithm
+    """
+    def __init__(self, depth, symbol):
         self.depth = depth
+        self.symbol=symbol
 
     def make_move(self, game):
         _, best_move = self.minimax(game, self.depth, True, float('-inf'), float('inf'))
@@ -75,13 +81,13 @@ class MyPlayer(Player):
         x, y = position
 
         if direction == Move.TOP and x > 0:
-            game._board[x, y], game._board[x - 1, y] = game._board[x - 1, y], game._board[x, y]
-        elif direction == Move.BOTTOM and x < game._board.shape[0] - 1:
-            game._board[x, y], game._board[x + 1, y] = game._board[x + 1, y], game._board[x, y]
+            game.get_board()[x, y], game.get_board()[x - 1, y] = game.get_board()[x - 1, y], game.get_board()[x, y]
+        elif direction == Move.BOTTOM and x < game.get_board().shape[0] - 1:
+            game.get_board()[x, y], game.get_board()[x + 1, y] = game.get_board()[x + 1, y], game.get_board()[x, y]
         elif direction == Move.LEFT and y > 0:
-            game._board[x, y], game._board[x, y - 1] = game._board[x, y - 1], game._board[x, y]
-        elif direction == Move.RIGHT and y < game._board.shape[1] - 1:
-            game._board[x, y], game._board[x, y + 1] = game._board[x, y + 1], game._board[x, y]
+            game.get_board()[x, y], game.get_board()[x, y - 1] = game.get_board()[x, y - 1], game.get_board()[x, y]
+        elif direction == Move.RIGHT and y < game.get_board().shape[1] - 1:
+            game.get_board()[x, y], game.get_board()[x, y + 1] = game.get_board()[x, y + 1], game.get_board()[x, y]
 
     def evaluate(self, game):
         winner = game.check_winner()
@@ -94,9 +100,9 @@ class MyPlayer(Player):
     def get_legal_moves(self, game):
         legal_moves = []
 
-        for x in range(game._board.shape[0]):
-            for y in range(game._board.shape[1]):
-                if game._board[x, y] == -1 or game._board[x, y] == 0 :
+        for x in range(game.get_board().shape[0]):
+            for y in range(game.get_board().shape[1]):
+                if game.get_board()[x, y] == -1 or game.get_board()[x, y] == self.symbol :
                     for direction in Move:
                         #print((x,y), direction)
                         if self.is_move_playable(game, (x, y), direction):
@@ -122,10 +128,10 @@ class MyPlayer(Player):
         if acceptable is False:
             return False
         # Check if the move is within the bounds of the board
-        if not (0 <= x < game._board.shape[0] and 0 <= y < game._board.shape[1]):
+        if not (0 <= x < game.get_board().shape[0] and 0 <= y < game.get_board().shape[1]):
             return False
-        #check if the cell is empty:
-        if game._board[x, y] ==1:
+
+        if game.get_board()[x, y] ==1-self.symbol:
             return False
         # Check if the move is towards an empty cell
         if direction == Move.TOP and x==0:
@@ -143,28 +149,27 @@ class MyPlayer(Player):
 
         return True
 
-# Example usage:
-# game = Game()
-# player1 = MinmaxPlayer(depth=3)
-# player2 = MinmaxPlayer(depth=3)
-# winner = game.play(player1, player2)
-# print(f"Player {winner} wins!")
-
 if __name__ == '__main__':
 
     sys.setrecursionlimit(10000)  # Increase the recursion depth to 10000
-
+    ITERATIONS=1000
     count=0
-    for i in range(100):
-        g = Game()
+    player1=MontecarloAgent(0)
+
+    for i in range(ITERATIONS):
+        print(i)
+        #g = Game()
+        g=MontecarloGame()
         #g.print()
-        player1 = MyPlayer(3)
+        #player1 = MinmaxPlayer(3,1)
         #player1 = RandomPlayer()
-        player2 = RandomPlayer()
-        winner = g.play(player1, player2)
+
+        player2 = RandomPlayer(1)
+        _,winner = g.play(player1, player2,1)
         #g.print()
         if winner==0:
             count+=1
 
     #print(f"Winner: Player {winner}")
-    print("My player won ", count/100)
+    print("My player won ", count/ITERATIONS)
+    #player1.print_q_table()
