@@ -1,10 +1,11 @@
 import random
+import time
+import pickle
+import numpy as np
+from tqdm.auto import tqdm
 from game import Game, Move, Player
-from Montecarlo import MontecarloAgent, MontecarloGame
-from copy import deepcopy
-import collections
-import sys
-
+from Montecarlo import MontecarloAgent
+from MinMax import MinmaxPlayer
 
 class RandomPlayer(Player):
     """class defining a player that chooses his moves randomly"""
@@ -12,164 +13,124 @@ class RandomPlayer(Player):
         super().__init__()
         self.symbol=symbol
 
-    def make_move(self,state:None, game: 'Game') -> tuple[tuple[int, int], Move]:
+    def make_move(self, game=None, state=None) -> tuple[tuple[int, int], Move]:
+
+        #random.seed(time.time())
         from_pos = (random.randint(0, 4), random.randint(0, 4))
         move = random.choice([Move.TOP, Move.BOTTOM, Move.LEFT, Move.RIGHT])
         return from_pos, move
 
-class MinmaxPlayer(Player):
-    """
-    player that plays according to the minmax algorithm
-    """
-    def __init__(self, depth, symbol):
-        self.depth = depth
-        self.symbol=symbol
 
-    def make_move(self, game):
-        _, best_move = self.minimax(game, self.depth, True, float('-inf'), float('inf'))
 
-        #print("My player is choosing ", best_move)
-        return best_move
+class MyGame(Game):
 
-    def minimax(self, game, depth, maximizing_player, alpha, beta):
+    def set_board(self,board):
 
-        if depth == 0 or game.check_winner() != -1:
-            return self.evaluate(game), None
+        self._board=board
 
-        legal_moves = self.get_legal_moves(game)
-        next_states = self.calculate_next_states(game, legal_moves)
+    def print(self):
+        '''Prints the board. -1 are neutral pieces, 0 are pieces of player 0, 1 pieces of player 1'''
+        for riga in self.get_board():
+            for elemento in riga:
+                if elemento == 0:
+                    print("❌", end=" ")  # Simbolo per 0
+                elif elemento == 1:
+                    print("⭕️", end=" ")  # Simbolo per 1
+                elif elemento == -1:
+                    print("➖", end=" ")  # Simbolo per -1
+            print("\n")
+
+def train_montecarlo(agent: MontecarloAgent):
+
+    """  with open('minmax_trained.pkl', 'rb') as file:
+        agent.q_table=pickle.load(file) """
+    agent.train(RandomPlayer(1-agent.symbol))
+    # Save dictionary to a file
+    with open('my_dict.pkl', 'wb') as file:
+        pickle.dump(agent.q_table, file) 
+
+def test_montecarlo(agent: MontecarloAgent):
+    
+    with open('my_dict.pkl', 'rb') as file:
+        agent.q_table=pickle.load(file)
+    agent.print_q_table()
+
+    opponent=RandomPlayer(1-agent.symbol)
+    
+    #opponent= MontecarloAgent(1-agent.symbol)
+    #opponent.q_table=agent.q_table
+    agent.test(opponent)
+
+
+def minmax_simulation():
+    
+    ITERATIONS=50
+    count=0
+
+
+    SYMBOL_MYAGENT=0
+    SYMBOL_OPPONENT=1-SYMBOL_MYAGENT
+    DEPTH_MINMAX=2
+    
+ 
+    print("MINMAX DEPTH ", DEPTH_MINMAX)
+    for i in tqdm(range(ITERATIONS)):
+
+        player1 = MinmaxPlayer(DEPTH_MINMAX,SYMBOL_MYAGENT)
+        player2 = RandomPlayer(SYMBOL_OPPONENT) 
+        #player2 = MinmaxPlayer(3,SYMBOL_OPPONENT)
+        g = MyGame()        
+      
+        winner = g.play( player1, player2)
         
-        if maximizing_player:
-            max_eval = float('-inf')
-            best_move = None
-            for i, new_game in enumerate(next_states):
-                eval, _ = self.minimax(new_game, depth - 1, False, alpha, beta)
-                if eval > max_eval:
-                    max_eval = eval
-                    best_move = legal_moves[i]
-                alpha = max(alpha, max_eval)
-                if beta <= alpha:
-                    break
+        if winner==SYMBOL_MYAGENT:
+            count+=1
 
-            return max_eval, best_move
-        else:
-            min_eval = float('inf')
-            best_move = None
-            for i, new_game in enumerate(next_states):
-                eval, _ = self.minimax(new_game, depth - 1, True, alpha, beta)
-                if eval < min_eval:
-                    min_eval = eval
-                    best_move = legal_moves[i]
-                beta = min(beta, min_eval)
-                if beta <= alpha:
-                    break
-            #print("best_move, ", best_move)
-            return min_eval, best_move
+    print("My player won ", count/ITERATIONS) 
+    
+
+    print("MINMAX DEPTH 4")
+    for i in tqdm(range(ITERATIONS)):
+
+        player1 = MinmaxPlayer(4,SYMBOL_MYAGENT)
+        player2 = RandomPlayer(SYMBOL_OPPONENT) 
+
+        g = Game()        
+      
+        winner = g.play(player1, player2)
         
-    def calculate_next_states(self, game, legal_moves):
-        next_states = []
+        if winner==SYMBOL_MYAGENT:
+            count+=1
 
-        for move in legal_moves:
-            position, direction = move
-            new_game = deepcopy(game)
-            self.apply_move(new_game, position, direction)
-            next_states.append(new_game)
+    print("My player won ", count/ITERATIONS)
 
-        return next_states
+    
+    
+    count=0
+    print("MINMAX DEPTH 5")
+        
+    for i in tqdm(range(ITERATIONS)):
 
-    def apply_move(self, game, position, direction):
-        x, y = position
+        player1 = MinmaxPlayer(5,SYMBOL_MYAGENT)
+        player2 = RandomPlayer(SYMBOL_OPPONENT) 
 
-        if direction == Move.TOP and x > 0:
-            game.get_board()[x, y], game.get_board()[x - 1, y] = game.get_board()[x - 1, y], game.get_board()[x, y]
-        elif direction == Move.BOTTOM and x < game.get_board().shape[0] - 1:
-            game.get_board()[x, y], game.get_board()[x + 1, y] = game.get_board()[x + 1, y], game.get_board()[x, y]
-        elif direction == Move.LEFT and y > 0:
-            game.get_board()[x, y], game.get_board()[x, y - 1] = game.get_board()[x, y - 1], game.get_board()[x, y]
-        elif direction == Move.RIGHT and y < game.get_board().shape[1] - 1:
-            game.get_board()[x, y], game.get_board()[x, y + 1] = game.get_board()[x, y + 1], game.get_board()[x, y]
+        g = Game()        
+      
+        winner = g.play(player1, player2)
+        
+        if winner==SYMBOL_MYAGENT:
+            count+=1
 
-    def evaluate(self, game):
-        winner = game.check_winner()
-        if winner == game.current_player_idx:
-            return 1
-        elif winner == (game.current_player_idx + 1) % 2:
-            return -1
-        else:
-            return 0
-    def get_legal_moves(self, game):
-        legal_moves = []
+    print("My player won ", count/ITERATIONS)
+   
 
-        for x in range(game.get_board().shape[0]):
-            for y in range(game.get_board().shape[1]):
-                if game.get_board()[x, y] == -1 or game.get_board()[x, y] == self.symbol :
-                    for direction in Move:
-                        #print((x,y), direction)
-                        if self.is_move_playable(game, (x, y), direction):
-                            #print("back da playable")
-                            legal_moves.append(((x, y), direction))
-        #print(legal_moves)
-        return legal_moves
-
-    def is_move_playable(self, game, position, direction):
-        x, y = position
-
-        acceptable: bool = (
-            # check if it is in the first row
-            (x == 0 and y < 5)
-            # check if it is in the last row
-            or (x == 4 and y< 5)
-            # check if it is in the first column
-            or (x <5 and y ==0)
-            # check if it is in the last column
-            or (x <5 and y == 4)
-            # and check if the piece can be moved by the current player
-        ) 
-        if acceptable is False:
-            return False
-        # Check if the move is within the bounds of the board
-        if not (0 <= x < game.get_board().shape[0] and 0 <= y < game.get_board().shape[1]):
-            return False
-
-        if game.get_board()[x, y] ==1-self.symbol:
-            return False
-        # Check if the move is towards an empty cell
-        if direction == Move.TOP and x==0:
-            #print("STEP 1")
-            return False
-        elif direction == Move.BOTTOM and x==4:
-            #print("STEP 2")
-            return False
-        elif direction == Move.LEFT and y == 0:
-            #print("STEP 3")
-            return False
-        elif direction == Move.RIGHT and y == 4:
-            #print("STEP 4")
-            return False
-
-        return True
 
 if __name__ == '__main__':
 
-    sys.setrecursionlimit(10000)  # Increase the recursion depth to 10000
-    ITERATIONS=1000
-    count=0
-    player1=MontecarloAgent(0)
-
-    for i in range(ITERATIONS):
-        print(i)
-        #g = Game()
-        g=MontecarloGame()
-        #g.print()
-        #player1 = MinmaxPlayer(3,1)
-        #player1 = RandomPlayer()
-
-        player2 = RandomPlayer(1)
-        _,winner = g.play(player1, player2,1)
-        #g.print()
-        if winner==0:
-            count+=1
-
-    #print(f"Winner: Player {winner}")
-    print("My player won ", count/ITERATIONS)
-    #player1.print_q_table()
+    #minmax_simulation()
+    agent=MontecarloAgent(1)
+    train_montecarlo(agent)
+    agent=MontecarloAgent(0)
+    #agent.print_q_table()
+    test_montecarlo(agent)
+ 

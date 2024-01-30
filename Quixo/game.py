@@ -7,6 +7,9 @@ import numpy as np
 
 
 class Move(Enum):
+    '''
+    Selects where you want to place the taken piece. The rest of the pieces are shifted
+    '''
     TOP = 0
     BOTTOM = 1
     LEFT = 2
@@ -21,6 +24,9 @@ class Player(ABC):
     @abstractmethod
     def make_move(self, game: 'Game') -> tuple[tuple[int, int], Move]:
         '''
+        The game accepts coordinates of the type (X, Y). X goes from left to right, while Y goes from top to bottom, as in 2D graphics.
+        Thus, the coordinates that this method returns shall be in the (X, Y) format.
+
         game: the Quixo game. You can use it to override the current game with yours, but everything is evaluated by the main game
         return values: this method shall return a tuple of X,Y positions and a move among TOP, BOTTOM, LEFT and RIGHT
         '''
@@ -89,37 +95,26 @@ class Game(object):
             while not ok:
                 from_pos, slide = players[self.current_player_idx].make_move(
                     self)
-                #print(from_pos,slide)
                 ok = self.__move(from_pos, slide, self.current_player_idx)
-                #print(ok)
-            #print("player ", self.current_player_idx, " is playing ", from_pos, slide)
-            #self.print()
+                
             winner = self.check_winner()
         return winner
 
     def __move(self, from_pos: tuple[int, int], slide: Move, player_id: int) -> bool:
         '''Perform a move'''
-        #print("Game __move method")
         if player_id > 2:
             return False
         # Oh God, Numpy arrays
-        #prev_value = deepcopy(self._board[(from_pos[1], from_pos[0])])
-        prev_value = deepcopy(self._board[(from_pos[0], from_pos[1])])
-        #acceptable = self.__take((from_pos[1], from_pos[0]), player_id)
-        acceptable = self.__take((from_pos[0], from_pos[1]), player_id)
-        
+        prev_value = deepcopy(self._board[(from_pos[1], from_pos[0])])
+        acceptable = self.__take((from_pos[1], from_pos[0]), player_id)
         if acceptable:
-            #acceptable = self.__slide((from_pos[1], from_pos[0]), slide)
-            acceptable = self.__slide((from_pos[0], from_pos[1]), slide)
-            
+            acceptable = self.__slide((from_pos[1], from_pos[0]), slide)
             if not acceptable:
-                #self._board[(from_pos[1], from_pos[0])] = deepcopy(prev_value)
-                self._board[(from_pos[0], from_pos[1])] = deepcopy(prev_value)
+                self._board[(from_pos[1], from_pos[0])] = deepcopy(prev_value)
         return acceptable
 
     def __take(self, from_pos: tuple[int, int], player_id: int) -> bool:
         '''Take piece'''
-        
         # acceptable only if in border
         acceptable: bool = (
             # check if it is in the first row
@@ -132,11 +127,8 @@ class Game(object):
             or (from_pos[1] == 4 and from_pos[0] < 5)
             # and check if the piece can be moved by the current player
         ) and (self._board[from_pos] < 0 or self._board[from_pos] == player_id)
-
-        #self.print()
         if acceptable:
             self._board[from_pos] = player_id
-            #print(self._board[from_pos])
         return acceptable
 
     def __slide(self, from_pos: tuple[int, int], slide: Move) -> bool:
@@ -177,7 +169,6 @@ class Game(object):
                 slide == Move.TOP or slide == Move.LEFT)
         # check if the move is acceptable
         acceptable: bool = acceptable_top or acceptable_bottom or acceptable_left or acceptable_right
-
         # if it is
         if acceptable:
             # take the piece
@@ -219,4 +210,3 @@ class Game(object):
                 # move the piece down
                 self._board[(self._board.shape[0] - 1, from_pos[1])] = piece
         return acceptable
-    
